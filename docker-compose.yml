@@ -32,7 +32,7 @@ services:
      - "80:80"
      - "443:443"
     environment:
-      - PROXY = 1
+      - PROXY=1
     volumes:
      - ./certs:/etc/letsencrypt:ro
     restart: unless-stopped
