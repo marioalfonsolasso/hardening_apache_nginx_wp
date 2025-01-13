@@ -1,0 +1,17 @@
+FROM python:3.9-slim
+
+# Install Certbot and certbot-dns-dynu
+RUN pip install certbot certbot-dns-dynu
+
+# Copy Dynu credentials file
+COPY dynu-credentials.ini /root/dynu-credentials.ini
+
+# Set environment variables for Certbot
+ENV LETSENCRYPT_USER_MAIL=prof.mario.lasso-mesa@iesalixar.org
+
+# Run Certbot with DNS challenge
+CMD ["certbot", "certonly", "--authenticator", "dns-dynu", \
+	"--dns-dynu-credentials", "/root/dynu-credentials.ini", \
+	"--email", "$LETSENCRYPT_USER_MAIL", \
+	"--agree-tos", "--no-eff-email", "--preferred-challenges", "dns", \
+	"-d", "iesalixar.freeddns.org", "-d", "www.iesalixar.freeddns.org"]

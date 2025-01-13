@@ -1,0 +1,84 @@
+services:
+  certbot:
+    container_name: certbot
+    build: ./dockerfiles/certbot
+    environment:
+      - EMAIL
+      - DOMAIN
+      - ALTDOMAIN
+    command: >-
+             certbot certonly --reinstall
+             --authenticator dns-dynu
+             --dns-dynu-credentials /root/dynu-credentials.ini
+             --email ${EMAIL} --agree-tos --no-eff-email
+             --preferred-challenges dns
+             --post-hook 'chown root:${GRUPO} /etc/letsencrypt/live /etc/letsencrypt/archive \
+               && chmod 710 /etc/letsencrypt/live /etc/letsencrypt/archive \
+               && chown root:${GRUPO} /etc/letsencrypt/archive/${DOMAIN}/privkey*.pem \
+               && chmod 640 /etc/letsencrypt/archive/${DOMAIN}/privkey*.pem'
+             -d ${DOMAIN} -d *.${DOMAIN}
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - ./dynu-credentials.ini:/root/dynu-credentials.ini
+    networks:
+    - web_network
+
+  nginx:
+    container_name: nginx
+    build: ./dockerfiles/nginx
+    depends_on:
+    - webserver
+    ports:
+     - "80:80"
+     - "443:443"
+    environment:
+      - PROXY = 1
+    volumes:
+     - ./certs:/etc/letsencrypt:ro
+    restart: unless-stopped
+    networks:
+    - web_network
+
+  webserver:
+    container_name: webserver
+    build: ./dockerfiles/apache
+    restart: unless-stopped
+    networks:
+    - web_network
+
+  blog:
+    container_name: blog
+    depends_on:
+      - db
+    image: wordpress:latest
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+    volumes:
+      - ./wp-content:/var/www/html/wp-content
+    networks:
+      - web_network
+
+  db:
+    container_name: db
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - web_network
+
+networks:
+  web_network:
+    driver: bridge
+
+volumes:
+  mysql: {}
