@@ -44,7 +44,11 @@
    - **Subject Alternative Name (SAN)**
 
    Comprueba que se trata de un certificado wildcard `*.tudominio.freeddns.org`.
-
+   
+11. Al finalizar, ejecuta el siguiente comando para parar y eliminar los contenedores y el volumen: 
+    ```bash
+    docker compose down -v
+    ```
 
 
 
