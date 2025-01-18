@@ -6,7 +6,7 @@ RUN apt update && \
 	apt -y upgrade && \ 
 	apt -qq -y install apache2 \ 
 	php libapache2-mod-php \ 
-	libapache2-mod-security2 git libapache2-mod-evasive
+	libapache2-mod-security2 git
 
 # Activamos el modulo mod_security
 RUN a2enmod security2
